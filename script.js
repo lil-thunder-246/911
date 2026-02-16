@@ -60,8 +60,8 @@ let bestByMode = {
 const plane = {
   x: 66,
   y: 240,
-  width: 74,
-  height: 56,
+  width: 96,
+  height: 40,
   vy: 0,
   angle: 0,
   alive: true
@@ -231,27 +231,59 @@ function killPlane(reason = "generic", frozenY = null) {
   }
 }
 
-function collideWithPipe(p) {
-  const hitboxInsetX = 12;
-  const hitboxInsetY = 10;
-  const px = plane.x + hitboxInsetX;
-  const py = plane.y + hitboxInsetY;
-  const pw = plane.width - hitboxInsetX * 2;
-  const ph = plane.height - hitboxInsetY * 2;
+function circleIntersectsRect(cx, cy, r, rx, ry, rw, rh) {
+  const nearestX = clamp(cx, rx, rx + rw);
+  const nearestY = clamp(cy, ry, ry + rh);
+  const dx = cx - nearestX;
+  const dy = cy - nearestY;
+  return dx * dx + dy * dy <= r * r;
+}
 
-  const planeLeft = px;
-  const planeRight = px + pw;
-  const planeTop = py;
-  const planeBottom = py + ph;
+function collideWithPipe(p) {
   const pipeLeft = p.x;
   const pipeRight = p.x + p.width;
 
-  // No overlap on X means no collision with this pipe pair.
-  if (planeRight <= pipeLeft || planeLeft >= pipeRight) return false;
-
   const gapTop = p.top;
   const gapBottom = p.top + p.gap;
-  return planeTop < gapTop || planeBottom > gapBottom;
+
+  // Three circles approximate fuselage + nose + tail for more natural crashes.
+  const body = [
+    {
+      x: plane.x + plane.width * 0.28,
+      y: plane.y + plane.height * 0.56,
+      r: plane.height * 0.2
+    },
+    {
+      x: plane.x + plane.width * 0.52,
+      y: plane.y + plane.height * 0.5,
+      r: plane.height * 0.24
+    },
+    {
+      x: plane.x + plane.width * 0.74,
+      y: plane.y + plane.height * 0.48,
+      r: plane.height * 0.18
+    }
+  ];
+
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    const overlapsPipeX = c.x + c.r > pipeLeft && c.x - c.r < pipeRight;
+    if (!overlapsPipeX) continue;
+
+    const hitsTop = circleIntersectsRect(c.x, c.y, c.r, pipeLeft, 0, p.width, gapTop);
+    const hitsBottom = circleIntersectsRect(
+      c.x,
+      c.y,
+      c.r,
+      pipeLeft,
+      gapBottom,
+      p.width,
+      canvas.height - gapBottom
+    );
+    if (hitsTop || hitsBottom) return true;
+  }
+
+  return false;
 }
 
 function updateGame(dt) {
@@ -317,7 +349,7 @@ function updateGame(dt) {
       }
     }
 
-    if (plane.y <= -10 || plane.y + plane.height >= canvas.height + 10) {
+    if (plane.y <= 0 || plane.y + plane.height >= canvas.height) {
       killPlane();
     }
   } else if (state === "crashed") {
@@ -455,7 +487,7 @@ function drawOverlays() {
 
     ctx.fillStyle = "#e6f2ff";
     ctx.font = "bold 28px Segoe UI";
-    ctx.fillText("FLOPPY PLANE", 87, 190);
+    ctx.fillText("911 PLANE", 125, 190);
 
     ctx.font = "bold 14px Segoe UI";
     ctx.fillStyle = "#b9d8ff";
