@@ -79,6 +79,7 @@ const explosion = {
   fps: 24,
   t: 0,
   delayMs: 950,
+  resultDelayMs: 500,
   elapsedMs: 0
 };
 
@@ -170,7 +171,7 @@ function flap() {
     return;
   }
   if (state === "crashed") {
-    if (explosion.elapsedMs < explosion.delayMs) return;
+    if (!isCrashResultVisible()) return;
     state = "menu";
     resetRun();
     return;
@@ -243,7 +244,7 @@ function circleIntersectsRect(cx, cy, r, rx, ry, rw, rh) {
 function collideWithPipe(p) {
   // Tighten the hitboxes slightly so transparent sprite padding does not
   // trigger premature crashes, while keeping consistent AABB collision.
-  const planePadX = 18;
+  const planePadX = -10;
   const planePadY = 8;
   const pipePadX = 16;
 
@@ -480,7 +481,7 @@ function drawOverlays() {
     ctx.fillText("Press Space or Click to launch", 108, 325);
   }
 
-  if (state === "crashed" && explosion.elapsedMs >= explosion.delayMs) {
+  if (state === "crashed" && isCrashResultVisible()) {
     const panelW = 340;
     const panelH = 220;
     const panelX = (canvas.width - panelW) * 0.5;
@@ -589,7 +590,7 @@ function onKey(e) {
 }
 
 function onPointerDown(e) {
-  if (state === "crashed" && explosion.elapsedMs >= explosion.delayMs) {
+  if (state === "crashed" && isCrashResultVisible()) {
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (canvas.width / rect.width);
     const y = (e.clientY - rect.top) * (canvas.height / rect.height);
@@ -600,6 +601,10 @@ function onPointerDown(e) {
     }
   }
   flap();
+}
+
+function isCrashResultVisible() {
+  return explosion.elapsedMs >= explosion.delayMs + explosion.resultDelayMs;
 }
 
 function updateInspectMode() {
