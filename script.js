@@ -1,5 +1,6 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+const inspectThresholdPx = 160;
 
 const assets = {
   bg: new Image(),
@@ -22,7 +23,7 @@ const MODES = {
     baseScrollSpeed: 2.5,
     gapMin: 175,
     gapMax: 200,
-    spawnEvery: 1450,
+    spawnEvery: 1600,
     windStrength: 0,
     scoreFactor: 1
   },
@@ -33,7 +34,7 @@ const MODES = {
     baseScrollSpeed: 3.1,
     gapMin: 155,
     gapMax: 180,
-    spawnEvery: 1200,
+    spawnEvery: 1325,
     windStrength: 0,
     scoreFactor: 1.4
   }
@@ -240,50 +241,28 @@ function circleIntersectsRect(cx, cy, r, rx, ry, rw, rh) {
 }
 
 function collideWithPipe(p) {
-  const pipeLeft = p.x;
-  const pipeRight = p.x + p.width;
+  // Tighten the hitboxes slightly so transparent sprite padding does not
+  // trigger premature crashes, while keeping consistent AABB collision.
+  const planePadX = 18;
+  const planePadY = 8;
+  const pipePadX = 16;
 
+  const px = plane.x + planePadX;
+  const py = plane.y + planePadY;
+  const pw = plane.width - planePadX * 2;
+  const ph = plane.height - planePadY * 2;
+
+  const pipeLeft = p.x + pipePadX;
+  const pipeRight = p.x + p.width - pipePadX;
   const gapTop = p.top;
   const gapBottom = p.top + p.gap;
 
-  // Three circles approximate fuselage + nose + tail for more natural crashes.
-  const body = [
-    {
-      x: plane.x + plane.width * 0.28,
-      y: plane.y + plane.height * 0.56,
-      r: plane.height * 0.2
-    },
-    {
-      x: plane.x + plane.width * 0.52,
-      y: plane.y + plane.height * 0.5,
-      r: plane.height * 0.24
-    },
-    {
-      x: plane.x + plane.width * 0.74,
-      y: plane.y + plane.height * 0.48,
-      r: plane.height * 0.18
-    }
-  ];
+  const overlapsPipeX = px + pw > pipeLeft && px < pipeRight;
+  if (!overlapsPipeX) return false;
 
-  for (let i = 0; i < body.length; i++) {
-    const c = body[i];
-    const overlapsPipeX = c.x + c.r > pipeLeft && c.x - c.r < pipeRight;
-    if (!overlapsPipeX) continue;
-
-    const hitsTop = circleIntersectsRect(c.x, c.y, c.r, pipeLeft, 0, p.width, gapTop);
-    const hitsBottom = circleIntersectsRect(
-      c.x,
-      c.y,
-      c.r,
-      pipeLeft,
-      gapBottom,
-      p.width,
-      canvas.height - gapBottom
-    );
-    if (hitsTop || hitsBottom) return true;
-  }
-
-  return false;
+  const hitsTopPipe = py < gapTop;
+  const hitsBottomPipe = py + ph > gapBottom;
+  return hitsTopPipe || hitsBottomPipe;
 }
 
 function updateGame(dt) {
@@ -623,9 +602,18 @@ function onPointerDown(e) {
   flap();
 }
 
+function updateInspectMode() {
+  const widthGap = Math.abs(window.outerWidth - window.innerWidth);
+  const heightGap = Math.abs(window.outerHeight - window.innerHeight);
+  const inspectOpen = widthGap > inspectThresholdPx || heightGap > inspectThresholdPx;
+  document.body.classList.toggle("inspect-mode", inspectOpen);
+}
+
 function ready() {
   document.addEventListener("keydown", onKey);
   document.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("resize", updateInspectMode);
+  updateInspectMode();
   resetRun();
   requestAnimationFrame(frameLoop);
 }

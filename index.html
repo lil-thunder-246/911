@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Floppy Plane: Pro Edition</title>
   <style>
     :root {
@@ -58,15 +59,30 @@
 
     canvas {
       display: block;
-      width: 400px;
-      height: 500px;
-      max-width: min(92vw, 400px);
-      max-height: min(78vh, 500px);
+      width: min(92vw, calc(78vh * 0.8), 400px);
+      height: auto;
+      aspect-ratio: 4 / 5;
       border-radius: 10px;
       border: 1px solid rgba(210, 233, 255, 0.18);
       background:
         linear-gradient(180deg, rgba(18, 40, 72, 0.92) 0%, rgba(7, 19, 38, 0.98) 100%);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+    }
+
+    /* Applied only when DevTools is detected as open. */
+    body.inspect-mode {
+      place-items: start center;
+      padding: 10px 12px 0;
+      overflow: visible;
+    }
+
+    body.inspect-mode .game-shell {
+      transform: scale(1.06);
+      transform-origin: center top;
+    }
+
+    body.inspect-mode canvas {
+      width: min(88vw, calc(78vh * 0.8), 400px);
     }
   </style>
 </head>
