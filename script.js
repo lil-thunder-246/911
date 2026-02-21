@@ -34,7 +34,7 @@ const MODES = {
     baseScrollSpeed: 3.1,
     gapMin: 155,
     gapMax: 180,
-    spawnEvery: 1325,
+    spawnEvery: 160,
     windStrength: 0,
     scoreFactor: 1.4
   }
