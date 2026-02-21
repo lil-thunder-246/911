@@ -34,7 +34,7 @@ const MODES = {
     baseScrollSpeed: 3.1,
     gapMin: 155,
     gapMax: 180,
-    spawnEvery: 160,
+    spawnEvery: 1600,
     windStrength: 0,
     scoreFactor: 1.4
   }
@@ -245,7 +245,7 @@ function collideWithPipe(p) {
   // Tighten the hitboxes slightly so transparent sprite padding does not
   // trigger premature crashes, while keeping consistent AABB collision.
   const planePadX = -10;
-  const planePadY = 8;
+  const planePadY = 0;
   const pipePadX = 16;
 
   const px = plane.x + planePadX;
